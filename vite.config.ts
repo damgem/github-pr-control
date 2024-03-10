@@ -9,9 +9,11 @@ export default defineConfig({
     monkey({
       entry: 'src/main.ts',
       userscript: {
-        icon: 'https://vitejs.dev/logo.svg',
+        name: 'GitHub PR Control Center',
+        description: 'A control center to manage the lifecycle of your PR',
+        match: ['https://github.com/*'],
+        author: 'Damian Gleumes',
         namespace: 'npm/vite-plugin-monkey',
-        match: ['https://www.google.com/'],
       },
       build: {
         externalGlobals: {
