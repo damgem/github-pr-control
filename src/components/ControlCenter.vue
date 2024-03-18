@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue';
 import { usePRDetails } from '../composables/usePRState';
 
 const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, stateActions } = usePRDetails()
@@ -31,6 +30,8 @@ const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, stateActions } =
         </p>
 
         <p>Preview Deployment: {{ hasPreviewLabel ? 'Yes' : 'No' }}</p>        
+
+        <v-icon name="oi-rocket" />
     </div>
 </template>
 

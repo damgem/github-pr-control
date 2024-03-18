@@ -1,7 +1,14 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 
-createApp(App).mount(
+import { OhVueIcon, addIcons } from "oh-vue-icons";
+import { OiRocket } from "oh-vue-icons/icons";
+
+addIcons(OiRocket);
+
+const app = createApp(App)
+app.component("v-icon", OhVueIcon);
+app.mount(
   (() => {
     const app = document.createElement('div');
     document.body.append(app);
