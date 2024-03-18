@@ -1,37 +1,71 @@
 <script setup lang="ts">
 import { usePRDetails } from '../composables/usePRState';
+import { COLORS } from '../constants'
+import Divider from './Divider.vue'
+import WithNumberPill from './WithNumberPill.vue'
 
 const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, stateActions } = usePRDetails()
 </script>
 
 <template>
     <div class='control-center'>
-        <p v-if="linkedIssue">
-            Issue Link
-            <a :href="linkedIssue.href ?? ''">{{ linkedIssue?.issueNumber }}</a>
+        <p>
+            <a :href="linkedIssue?.href ?? ''" target="_blank">
+                <v-icon name="oi-hash" :fill="linkedIssue ? COLORS.green : COLORS.gray" scale="1.33" />{{ linkedIssue?.issueNumber }}
+            </a>
         </p>
-        <p v-else>No issue linked</p>
+
+        <Divider />
+
+        <WithNumberPill :count="unaddressedTasks.length" subject-description="unaddressed issue(s)" hide-zero-pill>
+            <v-icon name="oi-tasklist" :fill="unaddressedTasks.length ? COLORS.red : COLORS.green" scale="1.33" />
+        </WithNumberPill>
 
         <p v-if="unaddressedTasks.length">
-            Unaddressed tasks:
-            <ul>
-                <li v-for="task in unaddressedTasks">{{ task }}</li>
-            </ul>
+        <ul>
+            <li v-for="task in unaddressedTasks">{{ task }}</li>
+        </ul>
         </p>
 
-        <p v-if="Object.values(stateActions).length">
-            State:
-            <ul>
-                <li v-for="[state, actions] of Object.entries(stateActions)">
-                    {{ state }}:
-                    <ul v-for="action in actions">{{ action }}</ul>
-                </li>
-            </ul>
+        <Divider />
+
+        <p>
+        <p v-if="stateActions.success">
+            <v-icon name="oi-check-circle" :fill="COLORS.green" scale="1.33" />
+            Success
+        <ul>
+            <li v-for="action in stateActions.success">{{ action }}</li>
+        </ul>
         </p>
 
-        <p>Preview Deployment: {{ hasPreviewLabel ? 'Yes' : 'No' }}</p>        
+        <p v-if="stateActions.problem">
+            <v-icon name="oi-alert" :fill="COLORS.orange" scale="1.33" /> Problem
+        <ul>
+            <li v-for="action in stateActions.problem">{{ action }}</li>
+        </ul>
+        </p>
 
-        <v-icon name="oi-rocket" />
+        <p v-if="stateActions.error">
+            <v-icon name="oi-x-circle" :fill="COLORS.red" scale="1.33" /> Error
+        <ul>
+            <li v-for="action in stateActions.error">{{ action }}</li>
+        </ul>
+        </p>
+
+        <p v-if="stateActions['undefined-state']">
+            <v-icon name="oi-question" scale="1.33" /> Other
+        <ul>
+            <li v-for="action in stateActions['undefined-state']">{{ action }}</li>
+        </ul>
+        </p>
+        </p>
+
+        <Divider />
+
+        <p>
+            <v-icon name="oi-rocket" title="Preview Deployment" :fill="hasPreviewLabel ? COLORS.green : COLORS.red"
+                scale="1.33" />
+        </p>
     </div>
 </template>
 
@@ -50,7 +84,7 @@ li {
     background-color: var(--bgColor-muted, var(--color-canvas-subtle));
 }
 
-.control-center p:last-of-type {
+.control-center p {
     margin-bottom: 0;
 }
 </style>
