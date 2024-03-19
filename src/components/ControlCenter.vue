@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { usePRDetails } from '../composables/usePRState';
 import { COLORS } from '../constants'
+import { copyShareable } from '../copyShareable';
 import Divider from './Divider.vue'
 import WithNumberPill from './WithNumberPill.vue'
 
@@ -66,6 +67,15 @@ const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, stateActions } =
             <v-icon name="oi-rocket" title="Preview Deployment" :fill="hasPreviewLabel ? COLORS.green : COLORS.red"
                 scale="1.33" />
         </p>
+
+        <Divider type="line"/>
+
+        <a @click="() => copyShareable(true)">
+            <v-icon name="oi-share-android" title="Copy PR title & URL" scale="1.33" />
+        </a>
+        <a @click="() => copyShareable(true)">
+            <v-icon name="oi-share-android" title="Copy PR title & URL" scale="1.33" />
+        </a>
     </div>
 </template>
 

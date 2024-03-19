@@ -1,4 +1,4 @@
-import { ref, readonly, unref, UnwrapRef } from 'vue'
+import { ref, readonly, unref, UnwrapRef, Ref } from 'vue'
 import { useMutationObserver } from '@vueuse/core'
 
 export function $(selector: string, root?: Element | null) {
