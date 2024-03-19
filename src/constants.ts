@@ -3,5 +3,5 @@ export const COLORS = {
     green: 'var(--bgColor-success-emphasis, var(--color-success-emphasis))',
     orange: 'var(--underlineNav-borderColor-active, var(--color-primer-border-active))',
     gray: '#848D97',
-    red: 'var(--bgColor-danger, var(--color-danger-fg))'
+    red: 'var(--bgColor-danger-emphasis, var(--color-danger-fg))'
 } as const
