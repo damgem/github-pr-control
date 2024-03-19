@@ -1,81 +1,61 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { usePRDetails } from '../composables/usePRState';
-import { COLORS } from '../constants'
 import { copyShareable } from '../copyShareable';
-import Divider from './Divider.vue'
-import WithNumberPill from './WithNumberPill.vue'
+import Icon from './Icon.vue'
+import { GM_openInTab } from '$';
 
-const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, stateActions } = usePRDetails()
+const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, actions } = usePRDetails()
+
+const successActions = computed(() => actions.value.filter(({state}) => state === 'success'))
+const nonSuccessActions = computed(() => actions.value.filter(({state}) => state !== 'success'))
 </script>
 
 <template>
     <div class='control-center'>
-        <p>
-            <a :href="linkedIssue?.href ?? ''" target="_blank">
-                <v-icon name="oi-hash" :fill="linkedIssue ? COLORS.green : COLORS.gray" scale="1.33" />{{ linkedIssue?.issueNumber }}
-            </a>
-        </p>
+        <Icon
+            name="oi-hash"
+            :pill-text="linkedIssue?.issueNumber"
+            title="Issue link provided in first comment"
+            :hide-pill="linkedIssue?.issueNumber === undefined"
+            :color="linkedIssue ? 'green' : 'gray'"
+            @click="() => GM_openInTab(linkedIssue?.href ?? '', { /* TODO: open in '_blank' target */ })"
+        />
 
-        <Divider />
+        <Icon name="oi-chevron-down" />
 
-        <WithNumberPill :count="unaddressedTasks.length" subject-description="unaddressed issue(s)" hide-zero-pill>
-            <v-icon name="oi-tasklist" :fill="unaddressedTasks.length ? COLORS.red : COLORS.green" scale="1.33" />
-        </WithNumberPill>
+        <Icon
+            name="oi-tasklist"
+            :pill-text="unaddressedTasks.length"
+            :hide-pill="!unaddressedTasks.length"
+            title="unaddressed issue(s)"
+            :color="unaddressedTasks.length ? 'red' : 'green'"
+        />
 
-        <p v-if="unaddressedTasks.length">
-        <ul>
-            <li v-for="task in unaddressedTasks">{{ task }}</li>
-        </ul>
-        </p>
+        <Icon name="oi-chevron-down" />
 
-        <Divider />
+        <Icon
+            v-if="nonSuccessActions.length === 0"
+            :pill-text="unaddressedTasks.length"
+            title="successful action(s)"
+            name="oi-check-circle"
+            color="green"
+        />
+        <Icon
+            v-else
+            name="oi-check-circle"
+            :pill-text="nonSuccessActions.length"
+            title="erronous action(s)"
+            color="green"
+        />
 
-        <p>
-        <p v-if="stateActions.success">
-            <v-icon name="oi-check-circle" :fill="COLORS.green" scale="1.33" />
-            Success
-        <ul>
-            <li v-for="action in stateActions.success">{{ action }}</li>
-        </ul>
-        </p>
+        <Icon name="oi-chevron-down" />
 
-        <p v-if="stateActions.problem">
-            <v-icon name="oi-alert" :fill="COLORS.orange" scale="1.33" /> Problem
-        <ul>
-            <li v-for="action in stateActions.problem">{{ action }}</li>
-        </ul>
-        </p>
+        <Icon name="oi-rocket" title="Preview Deployment" :color="hasPreviewLabel ? 'green' : 'red'"/>
 
-        <p v-if="stateActions.error">
-            <v-icon name="oi-x-circle" :fill="COLORS.red" scale="1.33" /> Error
-        <ul>
-            <li v-for="action in stateActions.error">{{ action }}</li>
-        </ul>
-        </p>
+        <Icon name="oi-horizontal-rule"/>
 
-        <p v-if="stateActions['undefined-state']">
-            <v-icon name="oi-question" scale="1.33" /> Other
-        <ul>
-            <li v-for="action in stateActions['undefined-state']">{{ action }}</li>
-        </ul>
-        </p>
-        </p>
-
-        <Divider />
-
-        <p>
-            <v-icon name="oi-rocket" title="Preview Deployment" :fill="hasPreviewLabel ? COLORS.green : COLORS.red"
-                scale="1.33" />
-        </p>
-
-        <Divider type="line"/>
-
-        <a @click="() => copyShareable(true)">
-            <v-icon name="oi-share-android" title="Copy PR title & URL" scale="1.33" />
-        </a>
-        <a @click="() => copyShareable(true)">
-            <v-icon name="oi-share-android" title="Copy PR title & URL" scale="1.33" />
-        </a>
+        <Icon name="oi-share-android" title="Copy PR title & URL" @click="() => copyShareable(true)"/>
     </div>
 </template>
 
@@ -97,4 +77,4 @@ li {
 .control-center p {
     margin-bottom: 0;
 }
-</style>
+</style>./Icon.vue

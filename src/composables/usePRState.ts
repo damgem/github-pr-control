@@ -1,30 +1,40 @@
 import { computed } from 'vue'
 import { useComputedElementQuery, $, $$ } from '../composables/useComputedElementQuery'
 
-import { reverseObject, createObjectFromKeysAndValues } from '../objectHelpers'
+const ACTION_IGNORE_LIST = [
+    'All checks have passed',
+    'This branch has not been deployed',
+    'Some checks haven\u2019t completed yet',
+    'Review required',
+]
 
-const ACTIONS_TO_FILTER = {
-    'success': [ 'All checks have passed' ],
-    'undefined-state': [ 'This branch has not been deployed', 'Some checks haven\u2019t completed yet' ],
-    'error': [ 'Review required' ],
-}
+const DEFINED_STATES = ['success', 'problem', 'error'] as const
+const STATES = [...DEFINED_STATES, 'unknown'] as const
 
-function getStateActions(actionItems: HTMLElement[]) {
-    const actions = actionItems.map(item => $('.status-heading', item)?.innerText ?? 'unknown-action')
-    const states = actionItems.map(item => {
+function processActionItems(actionItems: HTMLElement[]) {
+    function getAction(item: HTMLElement) {
+        return $('.status-heading', item)?.innerText ?? 'unknown-action'
+    }
+    
+    function getState(item: HTMLElement): typeof STATES[number] {
         const indicatorClassList = $('.completeness-indicator', item)?.classList ?? []
 
         const indicatorStateSuffixes = Array.from(indicatorClassList)
             .filter(cname => cname.startsWith('completeness-indicator-'))
             .map(cname => cname.replace('completeness-indicator-', ''))
 
-        return indicatorStateSuffixes.length === 1 ? indicatorStateSuffixes[0] : 'undefined-state'
-    })
+        const state = indicatorStateSuffixes.length !== 1 ? indicatorStateSuffixes[0] : undefined
 
-    const actionStates = createObjectFromKeysAndValues(actions, states)
-    const stateActions = reverseObject(actionStates)
+        if(!state || !DEFINED_STATES.includes(state as any)) {
+            return 'unknown'
+        }
 
-    return stateActions
+        return state as typeof DEFINED_STATES[number]
+    }
+
+    return actionItems
+        .map(item => ({ action: getAction(item), state: getState(item) }))
+        .filter(({ action }) => !ACTION_IGNORE_LIST.includes(action))
 }
 
 export function usePRDetails() {
@@ -48,29 +58,13 @@ export function usePRDetails() {
 
     const hasPreviewLabel = useComputedElementQuery(() => !!$('.discussion-sidebar-item .IssueLabel[data-name="preview"]'))
 
-    const unfilteredStateActions = useComputedElementQuery(() => getStateActions($$('.branch-action-item')))
-
-    const stateActions = computed(() => {
-        const stac = { ...unfilteredStateActions.value }
-
-        for(const [state, actionsToFilter] of Object.entries(ACTIONS_TO_FILTER)) {
-            if(!stac[state]) continue
-
-            stac[state] = stac[state]?.filter(msg => !actionsToFilter.includes(String(msg)))
-            
-            if(stac[state]!.length === 0) {
-                delete stac[state]
-            }
-        }
-
-        return stac
-    })
+    const actions = useComputedElementQuery(() => processActionItems($$('.branch-action-item')))
 
     return {
         unaddressedTasks,
         status,
         linkedIssue,
         hasPreviewLabel,
-        stateActions
+        actions
     }
 }
