@@ -43,17 +43,17 @@ const nonSuccessActions = computed(() => actions.value.filter(({state}) => state
         />
         <Icon
             v-else
-            name="oi-check-circle"
+            name="oi-x-circle"
             :pill-text="nonSuccessActions.length"
             title="erronous action(s)"
-            color="green"
+            color="red"
         />
 
         <Icon name="oi-chevron-down" />
 
         <Icon name="oi-rocket" title="Preview Deployment" :color="hasPreviewLabel ? 'green' : 'red'"/>
 
-        <Icon name="oi-horizontal-rule"/>
+        <Icon name="oi-horizontal-rule" style="margin: -3px 0;"/>
 
         <Icon name="oi-share-android" title="Copy PR title & URL" @click="() => copyShareable(true)"/>
     </div>
@@ -72,6 +72,7 @@ li {
     border: 1px solid gray;
     border-radius: 6px 0 0 6px;
     background-color: var(--bgColor-muted, var(--color-canvas-subtle));
+    overflow: hidden;
 }
 
 .control-center p {
