@@ -6,6 +6,7 @@ const ACTION_IGNORE_LIST = [
     'This branch has not been deployed',
     'Some checks haven\u2019t completed yet',
     'Review required',
+    'Merging is blocked',
 ]
 
 const DEFINED_STATES = ['success', 'problem', 'error'] as const
@@ -60,11 +61,39 @@ export function usePRDetails() {
 
     const actions = useComputedElementQuery(() => processActionItems($$('.branch-action-item')))
 
+    const previewDeploymentLinks = useComputedElementQuery(() => {
+        const comments = $$('.TimelineItem-avatar a[href="/apps/github-actions"]')
+            .map(e => e?.parentElement?.parentElement)
+            .filter(e => e && e.classList.contains('TimelineItem'))
+
+        const comment = comments[comments.length - 1] ?? null
+
+        function getLink(a: HTMLElement) {
+            const href = a.getAttribute('href')            
+            
+            if(!href) { return undefined }
+
+            try {
+                return { text: new URL(href).host, href }
+            } catch {
+                console.log('invalid url:', href)
+                return undefined
+            }
+        }
+
+        const links = $$('.comment-body a', comment)
+            .map(getLink)
+            .filter(link => link && !link.text.includes('notion'))
+
+        return links as Exclude<typeof links[number], undefined>[] // TODO: add ts-reset
+    })
+
     return {
         unaddressedTasks,
         status,
         linkedIssue,
         hasPreviewLabel,
-        actions
+        actions,
+        previewDeploymentLinks
     }
 }

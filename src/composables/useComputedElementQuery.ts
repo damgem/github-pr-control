@@ -24,8 +24,13 @@ export function useComputedElementQuery<T>(getElement: () => T) {
 
     useMutationObserver(
         () => document.body,
-        () => { element.value = unref(getElement()) as UnwrapRef<T> },
-        { subtree: true, childList: true, attributes: true }
+        () => { 
+            const newValue = unref(getElement()) as UnwrapRef<T>
+            if(newValue !== element.value) {
+                element.value = newValue
+            }
+        },
+        { subtree: true, childList: true, /* attributes: true */ }
     )
 
     return readonly(element)

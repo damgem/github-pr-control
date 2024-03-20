@@ -12,7 +12,7 @@ const props = defineProps<{
 
 const showPill = computed(() => props.hidePill === undefined ? props.pillText : !props.hidePill)
 const title = computed(() => [showPill.value ? props.pillText : '', props.title].filter(Boolean).join(' '))
-const fill = computed(() => props.color ?? COLORS.gray)
+const fill = computed(() => props.color ?? COLORS.fgMuted)
 </script>
 
 <template>
@@ -35,7 +35,7 @@ span {
     bottom: 0;
     transform: translate(calc(50% - 3px), calc(50% - 3px));
     padding: 0 3px;
-    background-color: #343941;
+    background-color: v-bind('COLORS.pillBg');
     --text-body-size-small: 0.75rem;
     --base-size-20: 0.75rem;
 }
