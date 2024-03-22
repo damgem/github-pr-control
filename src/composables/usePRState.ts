@@ -40,7 +40,27 @@ function processActionItems(actionItems: HTMLElement[]) {
 
 export function usePRDetails() {
     const checkboxElements = useComputedElementQuery(() => $$('input[type="checkbox"].task-list-item-checkbox:not(:checked)'))
-    const unaddressedTasks = computed(() => checkboxElements.value.map(cb => cb.parentElement?.innerText.split('\n')[0].trim()))
+
+    const unaddressedTasks = computed(() => {
+        const tasks = checkboxElements.value
+            .map(checkbox => {
+                if(!(checkbox instanceof HTMLInputElement)) {
+                    return undefined
+                }
+
+                const stickyHeaderHeight = $('.gh-header-sticky')?.getBoundingClientRect().height || 0
+                const scrollToTopCoordinate = stickyHeaderHeight + checkbox.getBoundingClientRect().top
+
+                return {
+                    description: checkbox.parentElement?.innerText.split('\n')[0].trim(),
+                    scrollIntoView: () => window.scrollTo({ top: scrollToTopCoordinate, behavior: 'smooth' }),
+                    check: () => checkbox.checked = true
+                }
+            })
+            .filter(Boolean)
+
+        return tasks as Exclude<typeof tasks[number], undefined>[] // TODO: add ts-reset
+    })
 
     const issueLinkElement = useComputedElementQuery(() => $('.issue-link'))
 

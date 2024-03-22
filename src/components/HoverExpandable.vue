@@ -37,6 +37,6 @@ withDefaults(defineProps<{
     border-radius: 6px 0 6px 6px;
     padding: 4px;
     background-color: v-bind('COLORS.bgMuted');
-    min-width: 300px;
+    min-width: 500px;
 }
 </style>

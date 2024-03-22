@@ -49,9 +49,10 @@ watch(previewDeploymentLinks, (neww, old) => {
             </template>
 
             {{ unaddressedTasks.length }} unadressed tasks(s):
-            <ul>
-                <li v-for="task in unaddressedTasks">{{ task }}</li>
-            </ul>
+            <div class='unaddressed-task' v-for="(task, i) in unaddressedTasks">
+                <input type="checkbox" :value="true" @click.once="task.check" />
+                <span @click="task.scrollIntoView">{{ task.description }}</span>
+            </div>
         </HoverExpandable>
 
         <Icon name="oi-chevron-down" />
@@ -91,7 +92,7 @@ watch(previewDeploymentLinks, (neww, old) => {
 
         <Icon name="oi-chevron-down" />
 
-        <HoverExpandable :disable-hover="!successActions.length && !nonSuccessActions.length">
+        <HoverExpandable :disable-hover="!successActions.length && !previewDeploymentLinks.length">
             <template #icon>
                 <Icon
                     name="oi-rocket"
@@ -137,5 +138,16 @@ li {
 
 .control-center p {
     margin-bottom: 0;
+}
+
+.unaddressed-task {
+    display: block;
+
+    span {
+        cursor: pointer;
+        text-decoration: underline;
+        margin-left: 4px;
+        font-weight: normal;
+    }
 }
 </style>
