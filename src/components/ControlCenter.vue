@@ -37,7 +37,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                 />
             </template>
 
-            Addresses Issue: <a :href="linkedIssue?.href ?? ''" target="_blank">#{{ linkedIssue?.issueNumber }}</a>
+            <h1>Addresses Issue:</h1> <a :href="linkedIssue?.href ?? ''" target="_blank">#{{ linkedIssue?.issueNumber }}</a>
         </HoverExpandable>
 
         <Icon name="oi-chevron-down" />
@@ -53,7 +53,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                 />
             </template>
 
-            {{ unaddressedTasks.length }} unadressed tasks(s):
+            <h1>{{ unaddressedTasks.length }} unadressed tasks(s):</h1>
             <div class='unaddressed-task' v-for="(task, i) in unaddressedTasks">
                 <input type="checkbox" :value="true" @click.once="task.check" />
                 <span @click="task.scrollIntoView">{{ task.description }}</span>
@@ -82,7 +82,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
             </template>
 
             <template v-if="nonSuccessActions.length">
-                {{ nonSuccessActions.length }} erronous action(s):
+                <h1>{{ nonSuccessActions.length }} erronous action(s):</h1>
                 <ul>
                     <li v-for="action in nonSuccessActions">{{ action.state }}: {{ action.action }}</li>
                 </ul>
@@ -106,7 +106,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                     title="Preview Deployment"
                 />
             </template>
-            Preview deployment links:
+            <h1>Preview deployment links:</h1>
             <ul>
                 <li v-for="link in previewDeploymentLinks">
                     <a :href="link.href ?? ''">{{ link.text }}</a>
@@ -120,7 +120,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
         <Icon
             name="oi-share-android"
             title="Copy PR title & URL"
-            style="cursor: pointer;"
+            style="cursor: pointer; position: relative; z-index: 20;"
             @click="() => copyShareable(true)"
         />
     </div>
@@ -129,12 +129,13 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
 <style scoped>
 
 .control-center {
-    color: v-bind('COLORS.fgHighlight');
+    color: v-bind('COLORS.normalText');
     position: fixed;
     top: 208px;
     right: 0;
     padding: v-bind('CONTROLL_CENTER_PADDING');
-    border: 1px solid v-bind('COLORS.border');
+    border: 1px solid v-bind('COLORS.borderHighlight');
+    border-right-width: 0;
     border-radius: 6px 0 0 6px;
     background-color: v-bind('COLORS.bgHighlight');
 }
@@ -150,8 +151,14 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
     }
 }
 
+h1 {
+    font-size: 1em;
+    display: inline-block;
+    font-weight: 600;
+}
+
 li {
-    margin-left: 16px;
+    margin-left: 20px;
 }
 
 p {

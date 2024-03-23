@@ -34,16 +34,16 @@ withDefaults(defineProps<{
     display: flex
 }
 
-.icon:hover {
+.icon {
     position: relative;
     z-index: 20;
 }
 
 .content {
     margin-right: v-bind('CONTROLL_CENTER_PADDING');
-    border: 1px solid gray;
+    border: 1px solid v-bind('COLORS.borderMuted');
     border-radius: 6px 0 6px 6px;
-    padding: 4px;
+    padding: 8px 16px;
     background-color: v-bind('COLORS.bgMuted');
     min-width: 500px;
 }

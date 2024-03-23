@@ -38,7 +38,9 @@ span {
     bottom: 0;
     transform: translate(calc(50% - 3px), calc(50% - 3px));
     padding: 0 3px;
+    color: v-bind('COLORS.fgMuted');
     background-color: v-bind('COLORS.pillBg');
+    user-select: none;
     --text-body-size-small: 0.75rem;
     --base-size-20: 0.75rem;
 }
