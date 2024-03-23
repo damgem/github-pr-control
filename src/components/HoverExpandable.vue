@@ -53,4 +53,36 @@ withDefaults(defineProps<{
     min-width: 20px;
     max-width: 20px;
 }
+
+.content::before, .content::after {
+    position: absolute;
+    top: calc(12.5px + 3px);
+    display: block;
+    pointer-events: none;
+    content: " ";
+    transform: translateY(-50%);
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+    left:100%;
+}
+
+.content::after {
+    width: 4px;
+    height: 8px;
+    background-color: v-bind('COLORS.bgHighlight');
+}
+
+.content::before {
+    width: calc((4 + sqrt(2)) * 1px);
+    height: calc((4 + sqrt(2)) * 2px);
+    background-color: v-bind('COLORS.borderMuted');
+}
+
+.title {
+    background-color: v-bind('COLORS.bgHighlight');
+    margin: -8px -16px 8px -16px;
+    padding: 5px 16px 4px;
+    border-bottom: 1px solid v-bind('COLORS.borderHighlight');
+    border-radius: 6px 0 0 0;
+    font-weight: 600;
+}
 </style>
