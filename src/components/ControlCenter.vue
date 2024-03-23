@@ -12,9 +12,10 @@ const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, actions, preview
 const successActions = computed(() => actions.value.filter(({state}) => state === 'success'))
 const nonSuccessActions = computed(() => actions.value.filter(({state}) => state !== 'success'))
 
-watch(previewDeploymentLinks, (neww, old) => {
-    console.log('new', neww, 'old', old)
-})
+function openInNewTab(url: string) {
+    window.open(url, '_blank') // Using window.open instead of GM_openInTab, as GM_openInTab does not open a tiny arc in Arc browser
+}
+
 </script>
 
 <template>
@@ -28,7 +29,7 @@ watch(previewDeploymentLinks, (neww, old) => {
                     :pill-text="linkedIssue?.issueNumber"
                     title="Issue link provided in first comment"
                     style="cursor: pointer;"
-                    @click="() => GM_openInTab(linkedIssue?.href ?? '', { /* TODO: open in '_blank' target */ })"
+                    @click="() => openInNewTab(linkedIssue?.href ?? '')" 
                 />
             </template>
 
