@@ -122,9 +122,6 @@ function openInNewTab(url: string) {
 </template>
 
 <style scoped>
-li {
-    margin-left: 16px;
-}
 
 .control-center {
     color: v-bind('COLORS.fgHighlight');
@@ -137,10 +134,6 @@ li {
     background-color: v-bind('COLORS.bgHighlight');
 }
 
-.control-center p {
-    margin-bottom: 0;
-}
-
 .unaddressed-task {
     display: block;
 
@@ -150,5 +143,13 @@ li {
         margin-left: 4px;
         font-weight: normal;
     }
+}
+
+li {
+    margin-left: 16px;
+}
+
+p {
+    margin-bottom: 0;
 }
 </style>
