@@ -16,7 +16,9 @@ withDefaults(defineProps<{
         </div>
         <div class="extended-hover-area"></div>
     </div>
-    <slot name="icon"></slot>
+    <div class="icon">
+        <slot name="icon"></slot>
+    </div>
 </div>
 </template>
 
@@ -30,6 +32,11 @@ withDefaults(defineProps<{
 
 .wrapper:hover .expandable {
     display: flex
+}
+
+.icon:hover {
+    position: relative;
+    z-index: 20;
 }
 
 .content {

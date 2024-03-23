@@ -15,7 +15,7 @@ export function copyShareable(directlyOpenSlack = false) {
     GM_setClipboard(copyValue, 'text')
 
     if(directlyOpenSlack) {
-        GM_openInTab('slack://open')
+        window.open('slack://open')
     } else {
         GM_notification({
             title: 'PR Sharable copied',
