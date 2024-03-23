@@ -36,13 +36,13 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                     @click="() => openInNewTab(linkedIssue?.href ?? '')" 
                 />
             </template>
-
-            <h1>Addresses Issue:</h1> <a :href="linkedIssue?.href ?? ''" target="_blank">#{{ linkedIssue?.issueNumber }}</a>
+            <template #title>Linked Issue</template>
+            <a :href="linkedIssue?.href ?? ''" target="_blank">#{{ linkedIssue?.issueNumber }}</a>
         </HoverExpandable>
 
         <Icon name="oi-chevron-down" />
 
-        <HoverExpandable :disable-hover="unaddressedTasks.length === 0">
+        <HoverExpandable>
             <template #icon>
                 <Icon
                     name="oi-tasklist"
@@ -53,7 +53,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                 />
             </template>
 
-            <h1>{{ unaddressedTasks.length }} unadressed tasks(s):</h1>
+            <template #title>{{ unaddressedTasks.length }} Unadressed Tasks(s)</template>
             <div class='unaddressed-task' v-for="(task, i) in unaddressedTasks">
                 <input type="checkbox" :value="true" @click.once="task.check" />
                 <span @click="task.scrollIntoView">{{ task.description }}</span>
@@ -62,7 +62,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
 
         <Icon name="oi-chevron-down" />
 
-        <HoverExpandable :disable-hover="!successActions.length && !nonSuccessActions.length">
+        <HoverExpandable>
             <template #icon>
                 <Icon
                     v-if="nonSuccessActions.length"
@@ -80,25 +80,19 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                     title="successful action(s)"
                 />
             </template>
+            <template #title>Action(s)</template>
 
-            <template v-if="nonSuccessActions.length">
-                <h1>{{ nonSuccessActions.length }} erronous action(s):</h1>
-                <ul>
-                    <li v-for="action in nonSuccessActions">{{ action.state }}: {{ action.action }}</li>
-                </ul>
-            </template>
-
-            <template v-if="successActions.length">
-                {{ successActions.length }} successful action(s):
-                <ul>
-                    <li v-for="action in successActions">{{ action.state }}: {{ action.action }}</li>
-                </ul>
-            </template>
+            <ul v-if="nonSuccessActions.length">
+                <li v-for="action in nonSuccessActions">{{ action.state }}: {{ action.action }}</li>
+            </ul>
+            <ul v-if="successActions.length">
+                <li v-for="action in successActions">{{ action.state }}: {{ action.action }}</li>
+            </ul>
         </HoverExpandable>
 
         <Icon name="oi-chevron-down" />
 
-        <HoverExpandable :disable-hover="!previewDeploymentLinks.length || isMerged">
+        <HoverExpandable>
             <template #icon>
                 <Icon
                     name="oi-rocket"
@@ -106,7 +100,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                     title="Preview Deployment"
                 />
             </template>
-            <h1>Preview deployment links:</h1>
+            <template #title>Preview Deployment Links</template>
             <ul>
                 <li v-for="link in previewDeploymentLinks">
                     <a :href="link.href ?? ''">{{ link.text }}</a>
@@ -149,12 +143,6 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
         margin-left: 4px;
         font-weight: normal;
     }
-}
-
-h1 {
-    font-size: 1em;
-    display: inline-block;
-    font-weight: 600;
 }
 
 li {

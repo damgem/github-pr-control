@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import { COLORS, CONTROLL_CENTER_PADDING } from '../constants'
-
-withDefaults(defineProps<{
-    disableHover: boolean
-}>(), {
-    disableHover: false
-})
 </script>
 
 <template>
 <div class="wrapper">
-    <div v-if="!disableHover" class="expandable">
+    <div class="expandable">
         <div class="content">
+            <div class="title">
+                <slot name="title"></slot>
+            </div>
             <slot></slot>
         </div>
         <div class="extended-hover-area"></div>
@@ -46,6 +43,7 @@ withDefaults(defineProps<{
     padding: 8px 16px;
     background-color: v-bind('COLORS.bgMuted');
     min-width: 500px;
+    transform: translateY(-3px);
 }
 
 .extended-hover-area {
