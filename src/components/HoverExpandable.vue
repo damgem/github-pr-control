@@ -14,6 +14,7 @@ withDefaults(defineProps<{
         <div class="content">
             <slot></slot>
         </div>
+        <div class="extended-hover-area"></div>
     </div>
     <slot name="icon"></slot>
 </div>
@@ -24,11 +25,11 @@ withDefaults(defineProps<{
     display: none;
     position: absolute;
     transform: translateX(-100%);
-    overflow: hidden;
+    z-index: 10;
 }
 
 .wrapper:hover .expandable {
-    display: block
+    display: flex
 }
 
 .content {
@@ -38,5 +39,11 @@ withDefaults(defineProps<{
     padding: 4px;
     background-color: v-bind('COLORS.bgMuted');
     min-width: 500px;
+}
+
+.extended-hover-area {
+    margin-right: -20px;
+    min-width: 20px;
+    max-width: 20px;
 }
 </style>
