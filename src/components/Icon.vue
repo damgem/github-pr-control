@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Color } from '../types'
 import { COLORS } from '../constants'
 
 const props = defineProps<{
     name: string
     title?: string
-    color?: keyof typeof COLORS
+    color?: Color
     pillText?: string | number
     hidePill?: boolean
 }>()
 
-const showPill = computed(() => props.hidePill === undefined ? props.pillText : !props.hidePill)
-const title = computed(() => [showPill.value ? props.pillText : '', props.title].filter(Boolean).join(' '))
-const fill = computed(() => props.color ?? COLORS.fgMuted)
+const pillText = computed(() => typeof props.pillText === 'number' ? String(props.pillText) : props.pillText)
+
+const showPill = computed(() => props.hidePill === undefined ? !!pillText.value : !props.hidePill)
+const title = computed(() => [showPill.value ? pillText.value : '', props.title].filter(Boolean).join(' '))
+const fill = computed(() => COLORS[props.color ?? 'fgMuted'])
 </script>
 
 <template>

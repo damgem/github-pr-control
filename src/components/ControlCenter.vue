@@ -6,6 +6,7 @@ import Icon from './Icon.vue'
 import { GM_openInTab } from '$';
 import HoverExpandable from './HoverExpandable.vue'
 import { COLORS, CONTROLL_CENTER_PADDING } from '../constants'
+import { Color } from '../types'
 
 const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, actions, previewDeploymentLinks } = usePRDetails()
 
@@ -16,6 +17,11 @@ function openInNewTab(url: string) {
     window.open(url, '_blank') // Using window.open instead of GM_openInTab, as GM_openInTab does not open a tiny arc in Arc browser
 }
 
+const isMerged = computed(() => status.value === 'merged')
+
+function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
+    return isMerged.value ? (mergeColor ?? 'purple') : nonMergeColor
+}
 </script>
 
 <template>
@@ -24,9 +30,7 @@ function openInNewTab(url: string) {
             <template #icon>
                 <Icon
                     name="oi-hash"
-                    :color="linkedIssue ? 'green' : 'fgHighlight'"
-                    :hide-pill="linkedIssue?.issueNumber === undefined"
-                    :pill-text="linkedIssue?.issueNumber"
+                    :color="linkedIssue ? mergeColorOr('green') : 'fgMuted'"
                     title="Issue link provided in first comment"
                     style="cursor: pointer;"
                     @click="() => openInNewTab(linkedIssue?.href ?? '')" 
@@ -42,10 +46,10 @@ function openInNewTab(url: string) {
             <template #icon>
                 <Icon
                     name="oi-tasklist"
-                    :color="unaddressedTasks.length ? 'red' : 'green'"
+                    :color="unaddressedTasks.length ? mergeColorOr('red', 'fgMuted') : mergeColorOr('green')"
                     :hide-pill="!unaddressedTasks.length"
                     :pill-text="unaddressedTasks.length"
-                    title="unaddressed issue(s)"
+                    title="unaddressed tasks(s)"
                 />
             </template>
 
@@ -63,15 +67,16 @@ function openInNewTab(url: string) {
                 <Icon
                     v-if="nonSuccessActions.length"
                     name="oi-x-circle"
-                    color="red"
+                    :color="mergeColorOr('red', 'fgMuted')"
                     :pill-text="nonSuccessActions.length"
                     title="erronous action(s)"
                 />
                 <Icon
                     v-else  
                     name="oi-check-circle"
-                    color="green"
+                    :color="mergeColorOr('green')"
                     :pill-text="successActions.length"
+                    :hide-pill="isMerged"
                     title="successful action(s)"
                 />
             </template>
@@ -93,11 +98,11 @@ function openInNewTab(url: string) {
 
         <Icon name="oi-chevron-down" />
 
-        <HoverExpandable :disable-hover="!successActions.length && !previewDeploymentLinks.length">
+        <HoverExpandable :disable-hover="!previewDeploymentLinks.length || isMerged">
             <template #icon>
                 <Icon
                     name="oi-rocket"
-                    :color="hasPreviewLabel ? 'green' : 'red'"
+                    :color="hasPreviewLabel ? mergeColorOr('green') : mergeColorOr('red', 'fgMuted')"
                     title="Preview Deployment"
                 />
             </template>
