@@ -5,7 +5,7 @@ import { copyShareable } from '../copyShareable';
 import Icon from './Icon.vue'
 import { GM_openInTab } from '$';
 import HoverExpandable from './HoverExpandable.vue'
-import { COLORS, CONTROLL_CENTER_PADDING } from '../constants'
+import { COLORS, CONTROLL_CENTER_PADDING_LEFT } from '../constants'
 import { Color } from '../types'
 
 const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, actions, previewDeploymentLinks } = usePRDetails()
@@ -36,7 +36,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                     @click="() => openInNewTab(linkedIssue?.href ?? '')" 
                 />
             </template>
-            <template #title>Linked Issue</template>
+            <template #head>Linked Issue</template>
             <a :href="linkedIssue?.href ?? ''" target="_blank">#{{ linkedIssue?.issueNumber }}</a>
         </HoverExpandable>
 
@@ -53,7 +53,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                 />
             </template>
 
-            <template #title>{{ unaddressedTasks.length }} Unadressed Tasks(s)</template>
+            <template #head>{{ unaddressedTasks.length }} Unadressed Tasks(s)</template>
             <div class='unaddressed-task' v-for="(task, i) in unaddressedTasks">
                 <input type="checkbox" :value="true" @click.once="task.check" />
                 <span @click="task.scrollIntoView">{{ task.description }}</span>
@@ -80,7 +80,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                     title="successful action(s)"
                 />
             </template>
-            <template #title>Action(s)</template>
+            <template #head>Action(s)</template>
 
             <ul v-if="nonSuccessActions.length">
                 <li v-for="action in nonSuccessActions">{{ action.state }}: {{ action.action }}</li>
@@ -100,7 +100,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                     title="Preview Deployment"
                 />
             </template>
-            <template #title>Preview Deployment Links</template>
+            <template #head>Preview Deployment Links</template>
             <ul>
                 <li v-for="link in previewDeploymentLinks">
                     <a :href="link.href ?? ''">{{ link.text }}</a>
@@ -127,7 +127,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
     position: fixed;
     top: 208px;
     right: 0;
-    padding: v-bind('CONTROLL_CENTER_PADDING');
+    padding: 8px 4px 8px v-bind('CONTROLL_CENTER_PADDING_LEFT');
     border: 1px solid v-bind('COLORS.borderHighlight');
     border-right-width: 0;
     border-radius: 6px 0 0 6px;

@@ -13,4 +13,4 @@ export const COLORS = {
     pillBg: '#343941',
 } as const
 
-export const CONTROLL_CENTER_PADDING = '4px'
+export const CONTROLL_CENTER_PADDING_LEFT = '6px'

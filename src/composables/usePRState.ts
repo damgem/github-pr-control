@@ -62,7 +62,7 @@ export function usePRDetails() {
         return tasks as Exclude<typeof tasks[number], undefined>[] // TODO: add ts-reset
     })
 
-    const issueLinkElement = useComputedElementQuery(() => $('.issue-link'))
+    const issueLinkElement = useComputedElementQuery(() => $('.timeline-comment .issue-link'))
 
     const linkedIssue = computed(() => {
         const el = issueLinkElement.value
