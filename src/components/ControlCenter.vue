@@ -8,7 +8,7 @@ import HoverExpandable from './HoverExpandable.vue'
 import { COLORS, CONTROLL_CENTER_PADDING_LEFT } from '../constants'
 import { Color } from '../types'
 
-const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, actions, previewDeploymentLinks } = usePRDetails()
+const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, actions, previewDeploymentLinks, scrollToPreviewDeploymentComment, scrollToActions } = usePRDetails()
 
 const successActions = computed(() => actions.value.filter(({state}) => state === 'success'))
 const nonSuccessActions = computed(() => actions.value.filter(({state}) => state !== 'success'))
@@ -26,7 +26,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
 
 <template>
     <div class='control-center'>
-        <HoverExpandable>
+        <HoverExpandable :only-head="!linkedIssue">
             <template #icon>
                 <Icon
                     name="oi-hash"
@@ -36,13 +36,16 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                     @click="() => openInNewTab(linkedIssue?.href ?? '')" 
                 />
             </template>
-            <template #head>Linked Issue</template>
+            <template #head>
+                <span v-if="linkedIssue">Linked Issue</span>
+                <span v-else>First comment does not include issue that this PR addresses</span>
+            </template>
             <a :href="linkedIssue?.href ?? ''" target="_blank">#{{ linkedIssue?.issueNumber }}</a>
         </HoverExpandable>
 
         <Icon name="oi-chevron-down" />
 
-        <HoverExpandable>
+        <HoverExpandable :only-head="!unaddressedTasks.length">
             <template #icon>
                 <Icon
                     name="oi-tasklist"
@@ -50,11 +53,15 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                     :hide-pill="!unaddressedTasks.length"
                     :pill-text="unaddressedTasks.length"
                     title="unaddressed tasks(s)"
+                    :click-effect="unaddressedTasks[0]?.scrollIntoView"
                 />
             </template>
-
-            <template #head>{{ unaddressedTasks.length }} Unadressed Tasks(s)</template>
-            <div class='unaddressed-task' v-for="(task, i) in unaddressedTasks">
+            <template #head>
+                <span v-if="unaddressedTasks.length === 0">All tasks are adressed 🎉</span>
+                <span v-else-if="unaddressedTasks.length === 1">1 unadressed task</span>
+                <span v-else>{{ unaddressedTasks.length }} unadressed tasks</span>
+            </template>
+            <div v-if="unaddressedTasks.length" v-for="(task, i) in unaddressedTasks" class='unaddressed-task'>
                 <div style="display: flex; align-items: start;">
                     <input style="margin-top: 5px;" type="checkbox" :value="true" @click.once="task.check" />
                     <span @click="task.scrollIntoView">{{ task.description }}</span>
@@ -64,7 +71,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
 
         <Icon name="oi-chevron-down" />
 
-        <HoverExpandable>
+        <HoverExpandable :only-head="!nonSuccessActions.length && !successActions.length">
             <template #icon>
                 <Icon
                     v-if="nonSuccessActions.length"
@@ -72,6 +79,7 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                     :color="mergeColorOr('red', 'fgMuted')"
                     :pill-text="nonSuccessActions.length"
                     title="erronous action(s)"
+                    :click-effect="scrollToActions"
                 />
                 <Icon
                     v-else  
@@ -80,9 +88,16 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                     :pill-text="successActions.length"
                     :hide-pill="isMerged"
                     title="successful action(s)"
+                    :click-effect="scrollToActions"
                 />
             </template>
-            <template #head>Action(s)</template>
+            <template #head>
+                <span v-if="nonSuccessActions.length === 1">1 non successfull action</span>
+                <span v-else-if="nonSuccessActions.length > 1">{{ nonSuccessActions.length }} non successfull actions</span>
+                <span v-else-if="successActions.length === 1">1 successfull action</span>
+                <span v-else-if="successActions.length > 1">{{ nonSuccessActions.length }} successfull actions</span>
+                <span v-else>No relevant actions found</span>
+            </template>
 
             <ul v-if="nonSuccessActions.length">
                 <li v-for="action in nonSuccessActions">{{ action.state }}: {{ action.action }}</li>
@@ -94,15 +109,19 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
 
         <Icon name="oi-chevron-down" />
 
-        <HoverExpandable>
+        <HoverExpandable :only-head="!previewDeploymentLinks.length">
             <template #icon>
                 <Icon
                     name="oi-rocket"
                     :color="hasPreviewLabel ? mergeColorOr('green') : mergeColorOr('red', 'fgMuted')"
                     title="Preview Deployment"
+                    :click-effect="scrollToPreviewDeploymentComment"
                 />
             </template>
-            <template #head>Preview Deployment Links</template>
+            <template #head>
+                <span v-if="previewDeploymentLinks.length">Preview Deployment Links</span>
+                <span v-else>Add the <code>Preview</code> label to trigger the preview deployment!</span>
+            </template>
             <ul>
                 <li v-for="link in previewDeploymentLinks">
                     <a :href="link.href ?? ''">{{ link.text }}</a>
@@ -116,8 +135,8 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
         <Icon
             name="oi-share-android"
             title="Copy PR title & URL"
-            style="cursor: pointer; position: relative; z-index: 20;"
-            @click="() => copyShareable(true)"
+            style="position: relative; z-index: 20;"
+            :click-effect="() => copyShareable(true)"
         />
     </div>
 </template>

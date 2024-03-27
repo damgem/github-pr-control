@@ -1,20 +1,21 @@
 <script setup lang="ts">
 import { COLORS, CONTROLL_CENTER_PADDING_LEFT } from '../constants'
-import { computed, useSlots } from 'vue'
 
-const slots = useSlots()
-const contentSlotDefined = computed(() => !!slots.default)
-const headSlotDefined = computed(() => !!slots.head)
+withDefaults(defineProps<{
+    onlyHead: boolean
+}>(), {
+    onlyHead: false,
+})
 </script>
 
 <template>
 <div class="wrapper">
-    <div class="hover-visible details-pane">
+    <div class="hover-visible details-pane" :class="{ soloHead: onlyHead }">
         <div style="overflow: hidden;">
-            <div v-if="headSlotDefined" class="head-container" >
+            <div class="head-container" :class="{ solo: onlyHead }">
                 <slot name="head"></slot>
             </div>
-            <div v-if="contentSlotDefined" class="content-container">
+            <div v-if="!onlyHead" class="content-container">
                 <slot></slot>
             </div>
         </div>
@@ -72,6 +73,10 @@ const headSlotDefined = computed(() => !!slots.head)
     background-color: v-bind('COLORS.borderMuted');
 }
 
+.details-pane.soloHead::after {
+    background-color: v-bind('COLORS.bgMuted');
+}
+
 .extended-hover-area {
     position: absolute;
     right: 0;
@@ -81,23 +86,34 @@ const headSlotDefined = computed(() => !!slots.head)
     transform: translateX(100%);
 }
 
-.head-container {
+.head-container:not(.solo) {
     background-color: v-bind('COLORS.bgHighlight');
-    padding: 5px 16px 4px 16px;
     font-weight: 600;
 
     border: 1px solid v-bind('COLORS.borderMuted');
     border-radius: 6px 0 0 0;
 }
 
-.content-container {
+.head-container {
+    padding: 4px 16px;
+}
+
+.content-container, .head-container.solo {
     background-color: v-bind('COLORS.bgMuted');
-    padding: 8px 16px;
-
     border: 1px solid v-bind('COLORS.borderMuted');
-    border-radius: 0 0 6px 6px;
-    border-top: unset;
+    border-radius: 6px;
+    border-top-right-radius: 0;
+}
 
+.head-container.solo {
+    color: v-bind('COLORS.fgMuted');
+    border-bottom-right-radius: 0;
+}
+
+.content-container {
+    padding: 8px 16px;
+    border-top-left-radius: 0;
+    border-top: unset;
     overflow-y: scroll;
     max-height: 50vh;
 }
@@ -105,9 +121,5 @@ const headSlotDefined = computed(() => !!slots.head)
 .icon-container {
     position: relative;
     z-index: 20;
-}
-
-br {
-    border-top: 1px solid v-bind('COLORS.borderHighlight');
 }
 </style>

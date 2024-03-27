@@ -81,13 +81,17 @@ export function usePRDetails() {
 
     const actions = useComputedElementQuery(() => processActionItems($$('.branch-action-item')))
 
-    const previewDeploymentLinks = useComputedElementQuery(() => {
+    const previewDeploymentComment = useComputedElementQuery<HTMLElement | null>(() => {
         const comments = $$('.TimelineItem-avatar a[href="/apps/github-actions"]')
             .map(e => e?.parentElement?.parentElement)
             .filter(e => e && e.classList.contains('TimelineItem'))
 
-        const comment = comments[comments.length - 1] ?? null
+        return comments[comments.length - 1] ?? null
+    })
 
+    const scrollToPreviewDeploymentComment = computed(() => previewDeploymentComment.value?.scrollIntoView)
+
+    const previewDeploymentLinks = computed(() => {
         function getLink(a: HTMLElement) {
             const href = a.getAttribute('href')            
             
@@ -101,12 +105,16 @@ export function usePRDetails() {
             }
         }
 
-        const links = $$('.comment-body a', comment)
+        const links = $$('.comment-body a', previewDeploymentComment.value as HTMLElement | null)
             .map(getLink)
             .filter(link => link && !link.text.includes('notion'))
 
         return links as Exclude<typeof links[number], undefined>[] // TODO: add ts-reset
     })
+
+    function scrollToActions() {
+        $('.merge-pr')?.scrollIntoView()
+    }
 
     return {
         unaddressedTasks,
@@ -114,6 +122,8 @@ export function usePRDetails() {
         linkedIssue,
         hasPreviewLabel,
         actions,
-        previewDeploymentLinks
+        previewDeploymentLinks,
+        scrollToPreviewDeploymentComment,
+        scrollToActions
     }
 }

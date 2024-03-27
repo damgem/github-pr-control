@@ -8,7 +8,8 @@ const props = defineProps<{
     title?: string
     color?: Color
     pillText?: string | number
-    hidePill?: boolean
+    hidePill?: boolean,
+    clickEffect?: () => void,
 }>()
 
 const pillText = computed(() => typeof props.pillText === 'number' ? String(props.pillText) : props.pillText)
@@ -19,7 +20,7 @@ const fill = computed(() => COLORS[props.color ?? 'fgMuted'])
 </script>
 
 <template>
-    <div>
+    <div @click="clickEffect" :style="{ cursor: clickEffect ? 'pointer' : undefined }">
         <v-icon :name :fill :title scale="1.33" />
         <!-- `Counter` is a class globally defined by GitHub -->
         <span v-if="showPill" :title class="Counter">{{ pillText }}</span>
