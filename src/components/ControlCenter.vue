@@ -55,8 +55,10 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
 
             <template #head>{{ unaddressedTasks.length }} Unadressed Tasks(s)</template>
             <div class='unaddressed-task' v-for="(task, i) in unaddressedTasks">
-                <input type="checkbox" :value="true" @click.once="task.check" />
-                <span @click="task.scrollIntoView">{{ task.description }}</span>
+                <div style="display: flex; align-items: start;">
+                    <input style="margin-top: 5px;" type="checkbox" :value="true" @click.once="task.check" />
+                    <span @click="task.scrollIntoView">{{ task.description }}</span>
+                </div>
             </div>
         </HoverExpandable>
 

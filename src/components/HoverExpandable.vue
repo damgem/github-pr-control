@@ -97,6 +97,9 @@ const headSlotDefined = computed(() => !!slots.head)
     border: 1px solid v-bind('COLORS.borderMuted');
     border-radius: 0 0 6px 6px;
     border-top: unset;
+
+    overflow-y: scroll;
+    max-height: 50vh;
 }
 
 .icon-container {
