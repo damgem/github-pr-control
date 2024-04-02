@@ -2,21 +2,22 @@
 import { COLORS, CONTROLL_CENTER_PADDING_LEFT } from '../constants'
 
 withDefaults(defineProps<{
-    onlyHead: boolean
+    altMode: boolean
 }>(), {
-    onlyHead: false,
+    altMode: false,
 })
 </script>
 
 <template>
 <div class="wrapper">
-    <div class="hover-visible details-pane" :class="{ soloHead: onlyHead }">
+    <div class="hover-visible details-pane" :class="{ 'alt-mode': altMode }">
         <div style="overflow: hidden;">
-            <div class="head-container" :class="{ solo: onlyHead }">
+            <div v-if="!altMode" class="head-container">
                 <slot name="head"></slot>
             </div>
-            <div v-if="!onlyHead" class="content-container">
-                <slot></slot>
+            <div class="content-container" :class="{ 'alt-mode': altMode }">
+                <slot name="alt" v-if="altMode"></slot>
+                <slot v-else></slot>
             </div>
         </div>
         <div class="extended-hover-area"></div>
@@ -67,14 +68,14 @@ withDefaults(defineProps<{
     background-color: v-bind('COLORS.bgHighlight');
 }
 
+.details-pane.alt-mode::after {
+    background-color: v-bind('COLORS.bgMuted');
+}
+
 .details-pane::before {
     width: calc((4 + sqrt(2)) * 1px);
     height: calc((4 + sqrt(2)) * 2px);
     background-color: v-bind('COLORS.borderMuted');
-}
-
-.details-pane.soloHead::after {
-    background-color: v-bind('COLORS.bgMuted');
 }
 
 .extended-hover-area {
@@ -86,36 +87,35 @@ withDefaults(defineProps<{
     transform: translateX(100%);
 }
 
-.head-container:not(.solo) {
-    background-color: v-bind('COLORS.bgHighlight');
-    font-weight: 600;
-
-    border: 1px solid v-bind('COLORS.borderMuted');
-    border-radius: 6px 0 0 0;
-}
-
 .head-container {
-    padding: 4px 16px;
+    border: 1px solid v-bind('COLORS.borderMuted');
+    border-top-left-radius: 6px;
+    font-weight: 600;
+    background-color: v-bind('COLORS.bgHighlight');
 }
 
-.content-container, .head-container.solo {
+.content-container {
     background-color: v-bind('COLORS.bgMuted');
     border: 1px solid v-bind('COLORS.borderMuted');
     border-radius: 6px;
     border-top-right-radius: 0;
-}
-
-.head-container.solo {
     color: v-bind('COLORS.fgMuted');
-    border-bottom-right-radius: 0;
 }
 
-.content-container {
+.content-container:not(.alt-mode) {
     padding: 8px 16px;
     border-top-left-radius: 0;
     border-top: unset;
     overflow-y: scroll;
     max-height: 50vh;
+}
+
+.head-container, .content-container.alt-mode {
+    padding: 4px 16px;
+}
+
+.content-container.alt-mode {
+    border-bottom-right-radius: 0;
 }
 
 .icon-container {

@@ -4,11 +4,11 @@ import { usePRDetails } from '../composables/usePRState';
 import { copyShareable } from '../copyShareable';
 import Icon from './Icon.vue'
 import { GM_openInTab } from '$';
-import HoverExpandable from './HoverExpandable.vue'
+import Section from './Section.vue'
 import { COLORS, CONTROLL_CENTER_PADDING_LEFT } from '../constants'
 import { Color } from '../types'
 
-const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, actions, previewDeploymentLinks, scrollToPreviewDeploymentComment, scrollToActions } = usePRDetails()
+const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, checks, actions, previewDeploymentLinks, scrollToActions } = usePRDetails()
 
 const successActions = computed(() => actions.value.filter(({state}) => state === 'success'))
 const nonSuccessActions = computed(() => actions.value.filter(({state}) => state !== 'success'))
@@ -19,47 +19,58 @@ function openInNewTab(url: string) {
 
 const isMerged = computed(() => status.value === 'merged')
 
+const numFailedChecks = computed(() => checks.value.filter(({ status }) => status === 'error').length)
+const numPendingChecks = computed(() => checks.value.filter(({ status }) => !status).length)
+const numSuccessfulChecks = computed(() => checks.value.filter(({ status }) => status === 'success').length)
+const numChecks = computed(() => checks.value.length)
+
+const allChecksPassed = computed(() => numFailedChecks.value === 0 && numPendingChecks.value === 0)
+
+const checksPillText = computed(() => numFailedChecks.value || numPendingChecks.value )
+
 function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
     return isMerged.value ? (mergeColor ?? 'purple') : nonMergeColor
+}
+
+const statusColors = {
+    'success': COLORS.green,
+    'error': COLORS.red,
+    'pending': COLORS.orange,
 }
 </script>
 
 <template>
     <div class='control-center'>
-        <HoverExpandable :only-head="!linkedIssue">
+        <Section :alt-mode="!linkedIssue">
             <template #icon>
                 <Icon
                     name="oi-hash"
                     :color="linkedIssue ? mergeColorOr('green') : 'fgMuted'"
-                    title="Issue link provided in first comment"
+                    title="Open Issue"
                     style="cursor: pointer;"
                     @click="() => openInNewTab(linkedIssue?.href ?? '')" 
                 />
             </template>
-            <template #head>
-                <span v-if="linkedIssue">Linked Issue</span>
-                <span v-else>First comment does not include issue that this PR addresses</span>
-            </template>
+            <template #head>Linked Issue</template>
             <a :href="linkedIssue?.href ?? ''" target="_blank">#{{ linkedIssue?.issueNumber }}</a>
-        </HoverExpandable>
+            <template #alt>First comment does not include the issue that this PR addresses</template>
+        </Section>
 
         <Icon name="oi-chevron-down" />
 
-        <HoverExpandable :only-head="!unaddressedTasks.length">
+        <Section :alt-mode="!unaddressedTasks.length">
             <template #icon>
                 <Icon
                     name="oi-tasklist"
                     :color="unaddressedTasks.length ? mergeColorOr('red', 'fgMuted') : mergeColorOr('green')"
                     :hide-pill="!unaddressedTasks.length"
                     :pill-text="unaddressedTasks.length"
-                    title="unaddressed tasks(s)"
+                    title="See first unaddressed task"
                     :click-effect="unaddressedTasks[0]?.scrollIntoView"
                 />
             </template>
             <template #head>
-                <span v-if="unaddressedTasks.length === 0">All tasks are adressed 🎉</span>
-                <span v-else-if="unaddressedTasks.length === 1">1 unadressed task</span>
-                <span v-else>{{ unaddressedTasks.length }} unadressed tasks</span>
+                {{ unaddressedTasks.length }} unadressed task{{ unaddressedTasks.length !== 1 ? 's' : '' }}
             </template>
             <div v-if="unaddressedTasks.length" v-for="(task, i) in unaddressedTasks" class='unaddressed-task'>
                 <div style="display: flex; align-items: start;">
@@ -67,67 +78,59 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
                     <span @click="task.scrollIntoView">{{ task.description }}</span>
                 </div>
             </div>
-        </HoverExpandable>
+            <template #alt>All tasks are adressed 🎉</template>
+        </Section>
 
         <Icon name="oi-chevron-down" />
 
-        <HoverExpandable :only-head="!nonSuccessActions.length && !successActions.length">
+        <Section :alt-mode="!checks.length">
             <template #icon>
                 <Icon
-                    v-if="nonSuccessActions.length"
-                    name="oi-x-circle"
-                    :color="mergeColorOr('red', 'fgMuted')"
-                    :pill-text="nonSuccessActions.length"
-                    title="erronous action(s)"
-                    :click-effect="scrollToActions"
-                />
-                <Icon
-                    v-else  
-                    name="oi-check-circle"
-                    :color="mergeColorOr('green')"
-                    :pill-text="successActions.length"
-                    :hide-pill="isMerged"
-                    title="successful action(s)"
+                    :name="allChecksPassed ? 'oi-check-circle' : 'oi-x-circle'"
+                    :color="allChecksPassed ? mergeColorOr('green') : mergeColorOr('red', 'fgMuted')"
+                    :pill-text="checksPillText"
+                    :hide-pill="!checks.length"
+                    title="Checks"
                     :click-effect="scrollToActions"
                 />
             </template>
             <template #head>
-                <span v-if="nonSuccessActions.length === 1">1 non successfull action</span>
-                <span v-else-if="nonSuccessActions.length > 1">{{ nonSuccessActions.length }} non successfull actions</span>
-                <span v-else-if="successActions.length === 1">1 successfull action</span>
-                <span v-else-if="successActions.length > 1">{{ nonSuccessActions.length }} successfull actions</span>
-                <span v-else>No relevant actions found</span>
+                <template v-if="numFailedChecks">
+                    {{ numFailedChecks }} check<template v-if="numFailedChecks > 1">s</template> failed
+                </template>
+                <template v-else-if="numPendingChecks">
+                    {{ numPendingChecks }} check<template v-if="numPendingChecks > 1">s</template> is pending
+                </template>
+                <template v-else>
+                    {{ numSuccessfulChecks }} check<template v-if="numPendingChecks > 1">s</template> successfull
+                </template>
             </template>
-
-            <ul v-if="nonSuccessActions.length">
-                <li v-for="action in nonSuccessActions">{{ action.state }}: {{ action.action }}</li>
+            <ul>
+                <li v-for="{status, name} in checks" :style="{color: statusColors[status ?? 'pending']}"> {{ name }}</li>
             </ul>
-            <ul v-if="successActions.length">
-                <li v-for="action in successActions">{{ action.state }}: {{ action.action }}</li>
-            </ul>
-        </HoverExpandable>
+            <template #alt>No checks found</template>
+        </Section>
 
         <Icon name="oi-chevron-down" />
 
-        <HoverExpandable :only-head="!previewDeploymentLinks.length">
+        <Section :alt-mode="!hasPreviewLabel">
             <template #icon>
                 <Icon
                     name="oi-rocket"
                     :color="hasPreviewLabel ? mergeColorOr('green') : mergeColorOr('red', 'fgMuted')"
-                    title="Preview Deployment"
-                    :click-effect="scrollToPreviewDeploymentComment"
+                    title="Visit preview deployment"
+                    :click-effect="previewDeploymentLinks.length ? () => openInNewTab(previewDeploymentLinks[0].href) : undefined"
                 />
             </template>
-            <template #head>
-                <span v-if="previewDeploymentLinks.length">Preview Deployment Links</span>
-                <span v-else>Add the <code>Preview</code> label to trigger the preview deployment!</span>
-            </template>
-            <ul>
+            <template #head>Preview Deployment Links</template>
+            <ul v-if="previewDeploymentLinks.length">
                 <li v-for="link in previewDeploymentLinks">
                     <a :href="link.href ?? ''">{{ link.text }}</a>
                 </li>
             </ul>
-        </HoverExpandable>
+            <span :style="{ backgroundColor: COLORS.fgMuted }" v-else>Waiting for <code>github-actions</code> bot comment ⏳</span>
+            <template #alt>Add the <code>Preview</code> label to trigger the preview deployment!</template>
+        </Section>
 
         <!-- Adding negative margin, to match amount of white space of the taller chevrons -->
         <Icon name="oi-horizontal-rule" style="margin: -2.75px 0;"/>
@@ -160,14 +163,13 @@ function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
 
     span {
         cursor: pointer;
-        text-decoration: underline;
         margin-left: 4px;
         font-weight: normal;
     }
 }
 
 li {
-    margin-left: 20px;
+    margin-left: 16px;
 }
 
 p {

@@ -1,21 +1,23 @@
 import { ref, readonly, unref, UnwrapRef, Ref } from 'vue'
 import { useMutationObserver } from '@vueuse/core'
 
-export function $(selector: string, root?: Element | null) {
-    if(root === null) {
-        return null
+type RootElement = Element | undefined | 'document'
+
+export function $(selector: string, root: RootElement = 'document') {
+    if(root === undefined) {
+        return undefined
     }
 
-    const element = (root ?? document).querySelector(selector)
-    return element instanceof HTMLElement ? element : null
+    const element = (root === 'document' ? document : root).querySelector(selector)
+    return element instanceof HTMLElement ? element : undefined
 }
 
-export function $$(selector: string, root?: Element | null) {
-    if(root === null) {
+export function $$(selector: string, root: RootElement = 'document') {
+    if(root === undefined) {
         return []
     }
 
-    const elements = (root ?? document).querySelectorAll(selector)
+    const elements = (root === 'document' ? document : root).querySelectorAll(selector)
     return Array.from(elements).filter(el => el instanceof HTMLElement) as Array<HTMLElement>
 }
 

@@ -2,7 +2,6 @@ import { computed } from 'vue'
 import { useComputedElementQuery, $, $$ } from '../composables/useComputedElementQuery'
 
 const ACTION_IGNORE_LIST = [
-    'All checks have passed',
     'This branch has not been deployed',
     'Some checks haven\u2019t completed yet',
     'Review required',
@@ -48,7 +47,7 @@ export function usePRDetails() {
                     return undefined
                 }
 
-                const stickyHeaderHeight = $('.gh-header-sticky')?.getBoundingClientRect().height || 0
+                const stickyHeaderHeight = $('.gh-header-sticky')?.getBoundingClientRect().height || 60
                 const scrollToTopCoordinate = stickyHeaderHeight + checkbox.getBoundingClientRect().top
 
                 return {
@@ -81,17 +80,25 @@ export function usePRDetails() {
 
     const actions = useComputedElementQuery(() => processActionItems($$('.branch-action-item')))
 
-    const previewDeploymentComment = useComputedElementQuery<HTMLElement | null>(() => {
+    const checks = useComputedElementQuery(() => {
+        return $$('.merge-status-list > .merge-status-item').map(item => {
+            const name = $('strong', item)?.innerHTML.replace('(pull_request)', '').trim()
+
+            const success = item.querySelector('svg.octicon-check')
+            const error = item.querySelector('svg.octicon-x')
+            const status = success && !error ? 'success' : error && !success ? 'error' : undefined
+
+            return { name, status: status as typeof status }
+        })
+    })
+
+    const previewDeploymentLinks = useComputedElementQuery(() => {
         const comments = $$('.TimelineItem-avatar a[href="/apps/github-actions"]')
             .map(e => e?.parentElement?.parentElement)
             .filter(e => e && e.classList.contains('TimelineItem'))
 
-        return comments[comments.length - 1] ?? null
-    })
+        const comment = comments[comments.length - 1] as HTMLElement | undefined
 
-    const scrollToPreviewDeploymentComment = computed(() => previewDeploymentComment.value?.scrollIntoView)
-
-    const previewDeploymentLinks = computed(() => {
         function getLink(a: HTMLElement) {
             const href = a.getAttribute('href')            
             
@@ -105,7 +112,7 @@ export function usePRDetails() {
             }
         }
 
-        const links = $$('.comment-body a', previewDeploymentComment.value as HTMLElement | null)
+        const links = $$('.comment-body a', comment)
             .map(getLink)
             .filter(link => link && !link.text.includes('notion'))
 
@@ -122,8 +129,8 @@ export function usePRDetails() {
         linkedIssue,
         hasPreviewLabel,
         actions,
+        checks,
         previewDeploymentLinks,
-        scrollToPreviewDeploymentComment,
         scrollToActions
     }
 }

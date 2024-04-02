@@ -15,7 +15,6 @@ const props = defineProps<{
 const pillText = computed(() => typeof props.pillText === 'number' ? String(props.pillText) : props.pillText)
 
 const showPill = computed(() => props.hidePill === undefined ? !!pillText.value : !props.hidePill)
-const title = computed(() => [showPill.value ? pillText.value : '', props.title].filter(Boolean).join(' '))
 const fill = computed(() => COLORS[props.color ?? 'fgMuted'])
 </script>
 
