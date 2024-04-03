@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import { usePRDetails } from '../composables/usePRState';
-import { copyShareable } from '../copyShareable';
+import { copyShareable } from '../logic/copyShareable';
+import { highlightScrollTo } from '../logic/highlightElement'
+import { $ } from '../logic/querySelector'
 import Icon from './Icon.vue'
-import { GM_openInTab } from '$';
 import Section from './Section.vue'
 import { COLORS, CONTROLL_CENTER_PADDING_LEFT } from '../constants'
 import { Color } from '../types'
 
-const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, checks, actions, previewDeploymentLinks, scrollToActions } = usePRDetails()
+const { unaddressedTasks, status, linkedIssue, hasPreviewLabel, checks, actions, previewDeploymentLinks } = usePRDetails()
 
-const successActions = computed(() => actions.value.filter(({state}) => state === 'success'))
-const nonSuccessActions = computed(() => actions.value.filter(({state}) => state !== 'success'))
+const successActions = computed(() => actions.value.filter(({status}) => status === 'success'))
+const nonSuccessActions = computed(() => actions.value.filter(({status}) => status !== 'success'))
 
 function openInNewTab(url: string) {
     window.open(url, '_blank') // Using window.open instead of GM_openInTab, as GM_openInTab does not open a tiny arc in Arc browser
@@ -19,23 +20,36 @@ function openInNewTab(url: string) {
 
 const isMerged = computed(() => status.value === 'merged')
 
-const numFailedChecks = computed(() => checks.value.filter(({ status }) => status === 'error').length)
-const numPendingChecks = computed(() => checks.value.filter(({ status }) => !status).length)
-const numSuccessfulChecks = computed(() => checks.value.filter(({ status }) => status === 'success').length)
+const failedChecks = computed(() => checks.value.filter(({ status }) => status === 'error'))
+const successfulChecks = computed(() => checks.value.filter(({ status }) => status ==='success'))
+const pendingChecks = computed(() => checks.value.filter(({ status }) => !status))
+
 const numChecks = computed(() => checks.value.length)
+const numFailedChecks = computed(() => failedChecks.value.length)
+const numSuccessfulChecks = computed(() => successfulChecks.value.length)
+const numPendingChecks = computed(() => pendingChecks.value.length)
 
 const allChecksPassed = computed(() => numFailedChecks.value === 0 && numPendingChecks.value === 0)
 
-const checksPillText = computed(() => numFailedChecks.value || numPendingChecks.value )
+const checksPillNumber = computed(() => numFailedChecks.value || numPendingChecks.value)
+
+function scrollToChecks() {
+    highlightScrollTo($('.merge-status-list')?.parentElement)
+}
+
+function scrollToActions(){
+    highlightScrollTo($('.branch-action-body'))
+}
 
 function mergeColorOr(nonMergeColor: Color, mergeColor?: Color): Color {
     return isMerged.value ? (mergeColor ?? 'purple') : nonMergeColor
 }
 
-const statusColors = {
-    'success': COLORS.green,
-    'error': COLORS.red,
-    'pending': COLORS.orange,
+function statusToColor(status: 'success' | 'error' | undefined) {
+    if (!status) {
+        return COLORS.orange
+    }
+    return status === 'success' ? COLORS.green : COLORS.red
 }
 </script>
 
@@ -46,7 +60,7 @@ const statusColors = {
                 <Icon
                     name="oi-hash"
                     :color="linkedIssue ? mergeColorOr('green') : 'fgMuted'"
-                    title="Open Issue"
+                    title="Open issue page"
                     style="cursor: pointer;"
                     @click="() => openInNewTab(linkedIssue?.href ?? '')" 
                 />
@@ -63,15 +77,13 @@ const statusColors = {
                 <Icon
                     name="oi-tasklist"
                     :color="unaddressedTasks.length ? mergeColorOr('red', 'fgMuted') : mergeColorOr('green')"
-                    :hide-pill="!unaddressedTasks.length"
                     :pill-text="unaddressedTasks.length"
-                    title="See first unaddressed task"
+                    :hide-pill="!unaddressedTasks.length"
+                    title="Scroll to first unaddressed tasks"
                     :click-effect="unaddressedTasks[0]?.scrollIntoView"
                 />
             </template>
-            <template #head>
-                {{ unaddressedTasks.length }} unadressed task{{ unaddressedTasks.length !== 1 ? 's' : '' }}
-            </template>
+            <template #head>Unadressed Tasks</template>
             <div v-if="unaddressedTasks.length" v-for="(task, i) in unaddressedTasks" class='unaddressed-task'>
                 <div style="display: flex; align-items: start;">
                     <input style="margin-top: 5px;" type="checkbox" :value="true" @click.once="task.check" />
@@ -87,27 +99,33 @@ const statusColors = {
             <template #icon>
                 <Icon
                     :name="allChecksPassed ? 'oi-check-circle' : 'oi-x-circle'"
-                    :color="allChecksPassed ? mergeColorOr('green') : mergeColorOr('red', 'fgMuted')"
-                    :pill-text="checksPillText"
-                    :hide-pill="!checks.length"
-                    title="Checks"
-                    :click-effect="scrollToActions"
+                    :color="numFailedChecks ? 'red' : numPendingChecks ? 'orange' : mergeColorOr('green')"
+                    :pill-text="checksPillNumber"
+                    :hide-pill="!checksPillNumber"
+                    title="See checks"
+                    :click-effect="scrollToChecks"
                 />
             </template>
-            <template #head>
-                <template v-if="numFailedChecks">
-                    {{ numFailedChecks }} check<template v-if="numFailedChecks > 1">s</template> failed
-                </template>
-                <template v-else-if="numPendingChecks">
-                    {{ numPendingChecks }} check<template v-if="numPendingChecks > 1">s</template> is pending
-                </template>
-                <template v-else>
-                    {{ numSuccessfulChecks }} check<template v-if="numPendingChecks > 1">s</template> successfull
-                </template>
+            <template #head>Checks</template>
+            <template v-if="failedChecks.length">
+                <strong :style="{ color: COLORS.red }">Error</strong>
+                <ul>
+                    <li v-for="{ name } in failedChecks">{{ name }}</li>
+                </ul>
             </template>
-            <ul>
-                <li v-for="{status, name} in checks" :style="{color: statusColors[status ?? 'pending']}"> {{ name }}</li>
-            </ul>
+            <template v-if="pendingChecks.length">
+                <strong :style="{ color: COLORS.orange }">Pending</strong>
+                <ul>
+                    <li v-for="{ name } in pendingChecks">{{ name }}</li>
+                </ul>
+            </template>
+            <template v-if="successfulChecks.length">
+                <strong :style="{ color: COLORS.green }">Success</strong>
+                <ul>
+                    <li v-for="{ name } in successfulChecks">{{ name }}</li>
+                </ul>
+            </template>
+            
             <template #alt>No checks found</template>
         </Section>
 
@@ -118,7 +136,7 @@ const statusColors = {
                 <Icon
                     name="oi-rocket"
                     :color="hasPreviewLabel ? mergeColorOr('green') : mergeColorOr('red', 'fgMuted')"
-                    title="Visit preview deployment"
+                    title="Open preview"
                     :click-effect="previewDeploymentLinks.length ? () => openInNewTab(previewDeploymentLinks[0].href) : undefined"
                 />
             </template>
@@ -132,15 +150,40 @@ const statusColors = {
             <template #alt>Add the <code>Preview</code> label to trigger the preview deployment!</template>
         </Section>
 
+        <Icon name="oi-chevron-down" />
+
+        <Section :alt-mode="!actions.length">
+            <template #icon>
+                <Icon
+                    :name="nonSuccessActions.length ? 'oi-stop' : 'oi-verified'"
+                    :color="mergeColorOr(nonSuccessActions.length ? 'red' : 'green')"
+                    title="See actions"
+                    :click-effect="scrollToActions"
+                    :pill-text="nonSuccessActions.length"
+                    :hide-pill="!nonSuccessActions.length"
+                />
+            </template>
+            <template #head>Final Actions</template>
+            <div v-for="{ title, description, status } in actions">
+                <strong :style="{color: statusToColor(status)}">{{ title }}</strong>
+                <p :style="{color: COLORS.fgMuted, lineHeight: 1.25, marginBottom:'4px'}">{{ description }}</p>
+            </div>
+        </Section>
+
         <!-- Adding negative margin, to match amount of white space of the taller chevrons -->
         <Icon name="oi-horizontal-rule" style="margin: -2.75px 0;"/>
 
-        <Icon
-            name="oi-share-android"
-            title="Copy PR title & URL"
-            style="position: relative; z-index: 20;"
-            :click-effect="() => copyShareable(true)"
-        />
+        <Section alt-mode>
+            <template #icon>
+                <Icon
+                    name="oi-share-android"
+                    title="Copy PR title & URL"
+                    style="position: relative; z-index: 20;"
+                    :click-effect="() => copyShareable(true)"
+                />
+            </template>
+            <template #alt>Copy PR title & URL to clipboard</template>
+        </Section>
     </div>
 </template>
 
@@ -175,4 +218,4 @@ li {
 p {
     margin-bottom: 0;
 }
-</style>
+</style>../logic/copyShareable

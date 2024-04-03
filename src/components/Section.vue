@@ -46,7 +46,7 @@ withDefaults(defineProps<{
     top: 0;
     left: 0;
     width: max-content;
-    max-width: 400px;
+    max-width: 480px;
     transform: translate(calc(-100% - v-bind('CONTROLL_CENTER_PADDING_LEFT')), -3px);
     z-index: 10;
 }

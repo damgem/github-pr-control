@@ -1,5 +1,5 @@
 import { GM_setClipboard, GM_notification, GM_openInTab } from '$';
-import { $ } from "./composables/useComputedElementQuery"
+import { $ } from "./querySelector"
 
 export function copyShareable(directlyOpenSlack = false) {
     const title = $('.js-issue-title')?.innerText

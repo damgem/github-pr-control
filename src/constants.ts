@@ -1,7 +1,7 @@
 export const COLORS = {
     purple: '#8957E5',
     green: '#238636',
-    orange: '#F78166',
+    orange: '#D29922',
     red: '#DA3633',
     normalText: '#E6EDF3',
     fgHighlight: '#C9D1D9',

@@ -1,38 +1,21 @@
-import { ref, readonly, unref, UnwrapRef, Ref } from 'vue'
-import { useMutationObserver } from '@vueuse/core'
+import { ref, readonly, unref, UnwrapRef, Ref, watchEffect } from 'vue'
+import { useBrowserLocation, useMutationObserver } from '@vueuse/core'
+import { $ } from '../logic/querySelector'
 
-type RootElement = Element | undefined | 'document'
-
-export function $(selector: string, root: RootElement = 'document') {
-    if(root === undefined) {
-        return undefined
-    }
-
-    const element = (root === 'document' ? document : root).querySelector(selector)
-    return element instanceof HTMLElement ? element : undefined
-}
-
-export function $$(selector: string, root: RootElement = 'document') {
-    if(root === undefined) {
-        return []
-    }
-
-    const elements = (root === 'document' ? document : root).querySelectorAll(selector)
-    return Array.from(elements).filter(el => el instanceof HTMLElement) as Array<HTMLElement>
-}
+// '.branch-action-item-icon svg[aria-hidden=true]'
 
 export function useComputedElementQuery<T>(getElement: () => T) {
     const element = ref<T>(getElement())
 
     useMutationObserver(
-        () => document.body,
+        () => $('body > div[data-turbo-body]'),
         () => { 
             const newValue = unref(getElement()) as UnwrapRef<T>
             if(newValue !== element.value) {
                 element.value = newValue
             }
         },
-        { subtree: true, childList: true, /* attributes: true */ }
+        { subtree: true, childList: true, attributes: true }
     )
 
     return readonly(element)

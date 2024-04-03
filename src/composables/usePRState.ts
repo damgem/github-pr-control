@@ -1,58 +1,43 @@
 import { computed } from 'vue'
-import { useComputedElementQuery, $, $$ } from '../composables/useComputedElementQuery'
+import { useComputedElementQuery } from '../composables/useComputedElementQuery'
+import { highlightScrollTo } from '../logic/highlightElement'
+import { toStatusString } from '../logic/toStatusString'
+import { $, $$ } from '../logic/querySelector'
 
 const ACTION_IGNORE_LIST = [
-    'This branch has not been deployed',
+    'All checks have passed',
+    'Some checks were not successful',
     'Some checks haven\u2019t completed yet',
-    'Review required',
-    'Merging is blocked',
+    'This branch has not been deployed',
 ]
 
-const DEFINED_STATES = ['success', 'problem', 'error'] as const
-const STATES = [...DEFINED_STATES, 'unknown'] as const
-
 function processActionItems(actionItems: HTMLElement[]) {
-    function getAction(item: HTMLElement) {
-        return $('.status-heading', item)?.innerText ?? 'unknown-action'
-    }
-    
-    function getState(item: HTMLElement): typeof STATES[number] {
-        const indicatorClassList = $('.completeness-indicator', item)?.classList ?? []
 
-        const indicatorStateSuffixes = Array.from(indicatorClassList)
-            .filter(cname => cname.startsWith('completeness-indicator-'))
-            .map(cname => cname.replace('completeness-indicator-', ''))
-
-        const state = indicatorStateSuffixes.length !== 1 ? indicatorStateSuffixes[0] : undefined
-
-        if(!state || !DEFINED_STATES.includes(state as any)) {
-            return 'unknown'
-        }
-
-        return state as typeof DEFINED_STATES[number]
-    }
-
-    return actionItems
-        .map(item => ({ action: getAction(item), state: getState(item) }))
-        .filter(({ action }) => !ACTION_IGNORE_LIST.includes(action))
 }
 
 export function usePRDetails() {
-    const checkboxElements = useComputedElementQuery(() => $$('input[type="checkbox"].task-list-item-checkbox:not(:checked)'))
 
-    const unaddressedTasks = computed(() => {
-        const tasks = checkboxElements.value
+    const status = useComputedElementQuery(() => $('.State')?.title.toLowerCase().replace('status: ', ''))
+
+    const linkedIssue = useComputedElementQuery(() => {
+        const link = $('.timeline-comment .issue-link')
+
+        if(!link) { return undefined }
+        
+        return {
+            issueNumber: link.innerText.replace('#', ''),
+            href: link.getAttribute('href')
+        }
+    })
+
+    const unaddressedTasks = useComputedElementQuery(() => {
+        const tasks = $$('input[type="checkbox"].task-list-item-checkbox:not(:checked)')
             .map(checkbox => {
-                if(!(checkbox instanceof HTMLInputElement)) {
-                    return undefined
-                }
-
-                const stickyHeaderHeight = $('.gh-header-sticky')?.getBoundingClientRect().height || 60
-                const scrollToTopCoordinate = stickyHeaderHeight + checkbox.getBoundingClientRect().top
+                if(!(checkbox instanceof HTMLInputElement)) { return undefined }
 
                 return {
                     description: checkbox.parentElement?.innerText.split('\n')[0].trim(),
-                    scrollIntoView: () => window.scrollTo({ top: scrollToTopCoordinate, behavior: 'smooth' }),
+                    scrollIntoView: () => highlightScrollTo(checkbox?.parentElement),
                     check: () => checkbox.checked = true
                 }
             })
@@ -61,36 +46,19 @@ export function usePRDetails() {
         return tasks as Exclude<typeof tasks[number], undefined>[] // TODO: add ts-reset
     })
 
-    const issueLinkElement = useComputedElementQuery(() => $('.timeline-comment .issue-link'))
-
-    const linkedIssue = computed(() => {
-        const el = issueLinkElement.value
-
-        if(!el) { return undefined }
-        
-        return {
-            issueNumber: el.innerText.replace('#', ''),
-            href: el.getAttribute('href')
-        }
-    })
-
-    const status = useComputedElementQuery(() => $('.State')?.title.toLowerCase().replace('status: ', ''))
-
-    const hasPreviewLabel = useComputedElementQuery(() => !!$('.discussion-sidebar-item .IssueLabel[data-name="preview"]'))
-
-    const actions = useComputedElementQuery(() => processActionItems($$('.branch-action-item')))
-
     const checks = useComputedElementQuery(() => {
         return $$('.merge-status-list > .merge-status-item').map(item => {
-            const name = $('strong', item)?.innerHTML.replace('(pull_request)', '').trim()
+            const name = $('strong', item)?.innerHTML.replace('(pull_request)', '').replace('CI /', '').trim()
 
-            const success = item.querySelector('svg.octicon-check')
-            const error = item.querySelector('svg.octicon-x')
-            const status = success && !error ? 'success' : error && !success ? 'error' : undefined
+            const success = !!item.querySelector('svg.octicon-check')
+            const error = !!item.querySelector('svg.octicon-x')
+            const status = toStatusString(success, error)
 
-            return { name, status: status as typeof status }
+            return { name, status } as const
         })
     })
+
+    const hasPreviewLabel = useComputedElementQuery(() => !!$('.discussion-sidebar-item .IssueLabel[data-name="preview"]'))
 
     const previewDeploymentLinks = useComputedElementQuery(() => {
         const comments = $$('.TimelineItem-avatar a[href="/apps/github-actions"]')
@@ -107,7 +75,6 @@ export function usePRDetails() {
             try {
                 return { text: new URL(href).host, href }
             } catch {
-                console.log('invalid url:', href)
                 return undefined
             }
         }
@@ -119,18 +86,38 @@ export function usePRDetails() {
         return links as Exclude<typeof links[number], undefined>[] // TODO: add ts-reset
     })
 
-    function scrollToActions() {
-        $('.merge-pr')?.scrollIntoView()
-    }
+    const actions = useComputedElementQuery(() => {
+        const actionItems = $$('.branch-action-item')
+        
+        const getTitle = (item: HTMLElement) => $('.status-heading', item)?.innerText ?? ''
+        const getDescription = (item: HTMLElement) => $('.status-meta', item)?.innerText ?? ''
+
+        function getStatus(item: HTMLElement) {
+            const indicatorClassList = Array.from($('.completeness-indicator', item)?.classList ?? [])
+            const success = indicatorClassList.includes('completeness-indicator-success')
+            const error = indicatorClassList.some(className => className.startsWith('completeness-indicator-') && className !== 'completeness-indicator-success')
+            return toStatusString(success, error)
+        }
+    
+        function isChecksAction(item: HTMLElement) {
+            const toggle = $('span.statuses-toggle-opened', item)
+            if(!toggle) { return false }
+            return ['Hide all checks', 'Show all checks'].includes(toggle.innerText)
+        }
+    
+        return actionItems
+            .filter(item => !isChecksAction(item))
+            .map(item => ({ title: getTitle(item), description: getDescription(item), status: getStatus(item) } as const))
+            .filter(({ title }) => !ACTION_IGNORE_LIST.includes(title))
+    })
 
     return {
-        unaddressedTasks,
         status,
         linkedIssue,
-        hasPreviewLabel,
-        actions,
+        unaddressedTasks,
         checks,
+        hasPreviewLabel,
         previewDeploymentLinks,
-        scrollToActions
+        actions,
     }
 }
