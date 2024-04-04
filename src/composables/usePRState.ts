@@ -11,10 +11,6 @@ const ACTION_IGNORE_LIST = [
     'This branch has not been deployed',
 ]
 
-function processActionItems(actionItems: HTMLElement[]) {
-
-}
-
 export function usePRDetails() {
 
     const currentGitHubPR = useComputedElementQuery(() => {
@@ -57,7 +53,7 @@ export function usePRDetails() {
             })
             .filter(Boolean)
 
-        return tasks as Exclude<typeof tasks[number], undefined>[] // TODO: add ts-reset
+        return tasks 
     })
 
     const checks = useComputedElementQuery(() => {
@@ -77,7 +73,8 @@ export function usePRDetails() {
     const previewDeploymentLinks = useComputedElementQuery(() => {
         const comments = $$('.TimelineItem-avatar a[href="/apps/github-actions"]')
             .map(e => e?.parentElement?.parentElement)
-            .filter(e => e && e.classList.contains('TimelineItem'))
+            .filter(Boolean)
+            .filter(e => e.classList.contains('TimelineItem'))
 
         const comment = comments[comments.length - 1] as HTMLElement | undefined
 
@@ -95,9 +92,10 @@ export function usePRDetails() {
 
         const links = $$('.comment-body a', comment)
             .map(getLink)
-            .filter(link => link && !link.text.includes('notion'))
+            .filter(Boolean)
+            .filter(link => !link.text.includes('notion'))
 
-        return links as Exclude<typeof links[number], undefined>[] // TODO: add ts-reset
+        return links
     })
 
     const actions = useComputedElementQuery(() => {
@@ -154,7 +152,7 @@ export function usePRDetails() {
         return actionItems
             .filter(item => !isChecksAction(item))
             .map(item => ({ title: getTitle(item), description: getDescription(item), status: getStatus(item) } as const))
-            .filter(({ title, status }) => !ACTION_IGNORE_LIST.includes(title))
+            .filter(({ title }) => !ACTION_IGNORE_LIST.includes(title))
     })
 
     return {

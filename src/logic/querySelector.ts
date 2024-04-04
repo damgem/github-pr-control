@@ -16,5 +16,5 @@ export function $$(selector: string, root: RootElement = 'document') {
 
     const rootElement = root === 'document' ? document : root
     const elements = rootElement.querySelectorAll(selector)
-    return Array.from(elements).filter(el => el instanceof HTMLElement) as Array<HTMLElement>
+    return Array.from(elements).filter((el): el is HTMLElement => el instanceof HTMLElement)
 }
