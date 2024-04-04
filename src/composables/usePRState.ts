@@ -17,6 +17,20 @@ function processActionItems(actionItems: HTMLElement[]) {
 
 export function usePRDetails() {
 
+    const currentGitHubPR = useComputedElementQuery(() => {
+        const parts = window.location.pathname
+            .split('/')
+            .filter(Boolean)
+
+        if(parts.length !== 4 || parts[2] !== 'pull') { return undefined }
+
+        return {
+            organization: parts[0],
+            repository: parts[1],
+            issueNumber: parseInt(parts[3]),
+        }
+    })
+
     const status = useComputedElementQuery(() => $('.State')?.title.toLowerCase().replace('status: ', ''))
 
     const linkedIssue = useComputedElementQuery(() => {
@@ -87,16 +101,48 @@ export function usePRDetails() {
     })
 
     const actions = useComputedElementQuery(() => {
-        const actionItems = $$('.branch-action-item')
+        const actionItems = $$('.mergeability-details > .branch-action-item')
+
+        function isVisibleInActionItem(item: HTMLElement | undefined | null) {
+            let element = item
+
+            while(element && !element.classList.contains('branch-action-item')) {
+                if(window.getComputedStyle(element).display === 'none') {
+                    return false;
+                }
+                element = element.parentElement
+            }
+
+            return !!element
+        }
         
-        const getTitle = (item: HTMLElement) => $('.status-heading', item)?.innerText ?? ''
-        const getDescription = (item: HTMLElement) => $('.status-meta', item)?.innerText ?? ''
+        function getTitle(item: HTMLElement) {
+            return $$('.status-heading', item)
+                .filter(isVisibleInActionItem)
+                .map(h => h.innerText)
+                .join(' | ')
+        }
+
+        const getDescription = (item: HTMLElement) => {
+            // if item.children contains div with .merging-body then cycle through all children and get the one with `display !== none` 
+            return $$('.status-meta', item)
+                .filter(isVisibleInActionItem)
+                .map(h => h.innerText)
+                .join(' | ')
+        }
 
         function getStatus(item: HTMLElement) {
-            const indicatorClassList = Array.from($('.completeness-indicator', item)?.classList ?? [])
-            const success = indicatorClassList.includes('completeness-indicator-success')
-            const error = indicatorClassList.some(className => className.startsWith('completeness-indicator-') && className !== 'completeness-indicator-success')
-            return toStatusString(success, error)
+            const statuses = $$('.completeness-indicator', item)
+                .filter(isVisibleInActionItem)
+                .map(icon => {
+                    const indicatorClassList = Array.from(icon.classList)
+                    const success = indicatorClassList.includes('completeness-indicator-success')
+                    const error = indicatorClassList.some(className => className.startsWith('completeness-indicator-') && className !== 'completeness-indicator-success')
+
+                    return toStatusString(success, error)
+                })
+
+            return statuses.length === 1 ? statuses[0] : undefined
         }
     
         function isChecksAction(item: HTMLElement) {
@@ -108,10 +154,11 @@ export function usePRDetails() {
         return actionItems
             .filter(item => !isChecksAction(item))
             .map(item => ({ title: getTitle(item), description: getDescription(item), status: getStatus(item) } as const))
-            .filter(({ title }) => !ACTION_IGNORE_LIST.includes(title))
+            .filter(({ title, status }) => !ACTION_IGNORE_LIST.includes(title))
     })
 
     return {
+        currentGitHubPR,
         status,
         linkedIssue,
         unaddressedTasks,
