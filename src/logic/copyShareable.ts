@@ -4,14 +4,14 @@ import { $ } from "./querySelector"
 export function copyShareable(directlyOpenSlack = false) {
     const title = $('.js-issue-title')?.innerText
     const headerNumber = $('.gh-header-number')?.innerText
-    
+
     const fullURL = new URL(window.location.href)
     const displayURL = `${fullURL.protocol}//${fullURL.host}${fullURL.pathname}`
 
     const isPullRequest = $('#pull-requests-tab.selected') !== null
     const type = isPullRequest ? 'PR' : 'Issue'
-
     const copyValue = `${type}: ${title} ${headerNumber} | ${displayURL}`
+
     GM_setClipboard(copyValue, 'text')
 
     if(directlyOpenSlack) {

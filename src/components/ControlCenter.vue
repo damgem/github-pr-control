@@ -52,7 +52,7 @@ function statusToColor(status: 'success' | 'error' | undefined) {
 </script>
 
 <template>
-    <div class='control-center' v-if="currentGitHubPR">
+    <div class="control-center" v-if="currentGitHubPR">
         <Section :alt-mode="!linkedIssue">
             <template #icon>
                 <Icon
@@ -60,7 +60,7 @@ function statusToColor(status: 'success' | 'error' | undefined) {
                     :color="linkedIssue ? mergeColorOr('green') : 'fgMuted'"
                     title="Open issue page"
                     style="cursor: pointer;"
-                    @click="() => openInNewTab(linkedIssue?.href ?? '')" 
+                    @click="() => openInNewTab(linkedIssue?.href ?? '')"
                 />
             </template>
             <template #head>Linked Issue</template>
@@ -123,7 +123,7 @@ function statusToColor(status: 'success' | 'error' | undefined) {
                     <li v-for="{ name } in successfulChecks">{{ name }}</li>
                 </ul>
             </template>
-            
+
             <template #alt>No checks found</template>
         </Section>
 
@@ -187,7 +187,6 @@ function statusToColor(status: 'success' | 'error' | undefined) {
 </template>
 
 <style scoped>
-
 .control-center {
     color: v-bind('COLORS.normalText');
     position: fixed;
@@ -217,4 +216,4 @@ li {
 p {
     margin-bottom: 0;
 }
-</style>../logic/copyShareable
+</style>

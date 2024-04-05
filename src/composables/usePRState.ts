@@ -1,4 +1,3 @@
-import { computed } from 'vue'
 import { useComputedElementQuery } from '../composables/useComputedElementQuery'
 import { highlightScrollTo } from '../logic/highlightElement'
 import { toStatusString } from '../logic/toStatusString'
